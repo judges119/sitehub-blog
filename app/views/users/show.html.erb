@@ -1,0 +1,16 @@
+<h1><%= @user.email %></h1>
+<p>
+  <% if current_user.try(:admin?) %>
+    <%= form_for @user, url: user_path(@user) do |f| %>
+      <p>
+        <%= f.label :admin %>
+        <%= f.check_box(:admin) %>
+      </p>
+      <%= f.submit %>
+    <% end %>
+  <% end %>
+</p>
+
+<p>
+  <%= link_to 'Users List', users_path %>
+</p>

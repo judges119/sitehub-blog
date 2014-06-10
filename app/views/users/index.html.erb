@@ -1,0 +1,29 @@
+<h1>Listing users</h1>
+
+<table width="100%">
+  <tr>
+    <td width="30%"><strong>Email</strong></td>
+    <td width="10%"><strong>Admin</strong></td>
+    <td colspan="2" width="20%"></td>
+  </tr>
+
+  <% @users.each do |user| %>
+    <tr>
+      <td><%= link_to user.email, user_path(user) %></td>
+      <td>
+        <% if user.admin? %>
+          Yes
+        <% end %>
+      </td>
+      <% if current_user.try(:admin?) %>
+        <td><%= link_to 'Destroy', user, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      <% else %>
+        <td></td>
+      <% end %>
+    </tr>
+  <% end %>
+</table>
+
+<p>
+  <%= link_to 'Index', posts_path %>
+</p>

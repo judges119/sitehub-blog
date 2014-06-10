@@ -6,6 +6,9 @@ class PostsController < ApplicationController
   # GET /posts.json
   def index
     @posts = Post.all
+    if current_user == User.first && !current_user.try(:admin?) && User.count == 1
+      current_user.update_attribute :admin, true
+    end
   end
 
   # GET /posts/1
@@ -21,12 +24,15 @@ class PostsController < ApplicationController
   # GET /posts/1/edit
   def edit
     if author_exists = User.where(:id => @post.user_id).first
-      if current_user == author_exists
+      if current_user == author_exists || current_user.try(:admin?)
       else
         render :show
       end
     else
-      render :show
+      if current_user.try(:admin?)
+      else
+        render :show
+      end
     end
   end
 
@@ -50,7 +56,7 @@ class PostsController < ApplicationController
   # PATCH/PUT /posts/1.json
   def update
     if author_exists = User.where(:id => @post.user_id).first
-      if current_user == author_exists
+      if current_user == author_exists || current_user.try(:admin?)
         respond_to do |format|
           if @post.update(post_params)
             format.html { redirect_to @post, notice: 'Post was successfully updated.' }
@@ -64,7 +70,15 @@ class PostsController < ApplicationController
         render :show
       end
     else
-      render :show
+      if current_user.try(:admin?)
+        if @post.update(post_params)
+          redirect_to @post, notice: 'Post was successfully updated.'
+        else
+          render :edit
+        end
+      else
+        render :show
+      end
     end
   end
 
@@ -72,7 +86,7 @@ class PostsController < ApplicationController
   # DELETE /posts/1.json
   def destroy
     if author_exists = User.where(:id => @post.user_id).first
-      if current_user == author_exists
+      if current_user == author_exists || current_user.try(:admin?)
         @post.destroy
         respond_to do |format|
           format.html { redirect_to posts_url, notice: 'Post was successfully destroyed.' }
@@ -82,7 +96,12 @@ class PostsController < ApplicationController
         render :show
       end
     else
-      render :show
+      if current_user.try(:admin?)
+        @post.destroy
+        redirect_to posts_url, notice: 'Post was successfully destroyed.'
+      else
+        render :show
+      end
     end
   end
 
