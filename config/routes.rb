@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
   devise_for :users
-  resources :posts
-  resources :users
+  resources :posts, :users
+  get '/tags', to: 'tags#index', as: 'tags'
+  get '/tags/:id', to: 'tags#show', as: 'tag'
+  delete '/tags/:id', to: 'tags#destroy'
   
   root 'posts#index'
 

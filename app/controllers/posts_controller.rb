@@ -37,66 +37,71 @@ class PostsController < ApplicationController
   end
 
   # POST /posts
-  # POST /posts.json
   def create
-    @post = Post.new(post_params)
-
-    respond_to do |format|
+    if post_params[:title].squish.downcase.tr(" ","_").gsub(/[^0-9A-Za-z_]/, '') == 'new'
+      redirect_to posts_path, notice: 'Post cannot be titled "new".'
+    else
+      @post = Post.new(post_params)
+      @post.url = post_params[:title].squish.downcase.tr(" ","_").gsub(/[^0-9A-Za-z_]/, '')
+      @post.tags = ready_tags
+      
       if @post.save
-        format.html { redirect_to @post, notice: 'Post was successfully created.' }
-        format.json { render :show, status: :created, location: @post }
+        redirect_to @post, notice: 'Post was successfully created.'
       else
-        format.html { render :new }
-        format.json { render json: @post.errors, status: :unprocessable_entity }
+        destroy_orphaned_tags(@post.tags, 0)
+        render :new
       end
     end
   end
 
   # PATCH/PUT /posts/1
-  # PATCH/PUT /posts/1.json
   def update
-    if author_exists = User.where(:id => @post.user_id).first
-      if current_user == author_exists || current_user.try(:admin?)
-        respond_to do |format|
-          if @post.update(post_params)
-            format.html { redirect_to @post, notice: 'Post was successfully updated.' }
-            format.json { render :show, status: :ok, location: @post }
-          else
-            format.html { render :edit }
-            format.json { render json: @post.errors, status: :unprocessable_entity }
-          end
-        end
-      else
-        render :show
-      end
+    if post_params[:title].squish.downcase.tr(" ","_").gsub(/[^0-9A-Za-z_]/, '') == 'new'
+      render :edit
     else
-      if current_user.try(:admin?)
-        if @post.update(post_params)
-          redirect_to @post, notice: 'Post was successfully updated.'
+      destroy_orphaned_tags(@post.tags, 1)
+      @post.url = post_params[:title].squish.downcase.tr(" ","_").gsub(/[^0-9A-Za-z_]/, '')
+      @post.tags = ready_tags
+      
+      if author_exists = User.where(:id => @post.user_id).first
+        if current_user == author_exists || current_user.try(:admin?)
+          if @post.update(post_params)
+            redirect_to @post, notice: 'Post was successfully updated.'
+          else
+            destroy_orphaned_tags(@post.tags, 0)
+            render :edit
+          end
         else
-          render :edit
+          render :show
         end
       else
-        render :show
+        if current_user.try(:admin?)
+          if @post.update(post_params)
+            redirect_to @post, notice: 'Post was successfully updated.'
+          else
+            destroy_orphaned_tags(@post.tags, 0)
+            render :edit
+          end
+        else
+          render :show
+        end
       end
     end
   end
 
   # DELETE /posts/1
-  # DELETE /posts/1.json
   def destroy
     if author_exists = User.where(:id => @post.user_id).first
       if current_user == author_exists || current_user.try(:admin?)
+        destroy_orphaned_tags(@post.tags, 1)
         @post.destroy
-        respond_to do |format|
-          format.html { redirect_to posts_url, notice: 'Post was successfully destroyed.' }
-          format.json { head :no_content }
-        end
+        redirect_to posts_url, notice: 'Post was successfully destroyed.'
       else
         render :show
       end
     else
       if current_user.try(:admin?)
+		destroy_orphaned_tags(@post.tags, 1)
         @post.destroy
         redirect_to posts_url, notice: 'Post was successfully destroyed.'
       else
@@ -108,11 +113,36 @@ class PostsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_post
-      @post = Post.find(params[:id])
+      @post = Post.find_by_param(params[:id])
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def post_params
       params.require(:post).permit(:title, :content, :user_id)
+    end
+    
+    def tag_params
+      params.require(:post).permit(:tag_ids)
+    end
+    
+    def ready_tags
+      tags = tag_params[:tag_ids].split(/,\s*/)
+      tags_ready = []
+      tags.each do |tag|
+        temp = Tag.find_by_url(tag.squish.downcase.tr(" ","_").gsub(/[^0-9A-Za-z_]/, ''))
+        if temp == nil
+          temp = Tag.create(name: tag, url: tag.squish.downcase.tr(" ","_").gsub(/[^0-9A-Za-z_]/, ''))
+        end
+        tags_ready.push(temp)
+      end
+      tags_ready
+    end
+    
+    def destroy_orphaned_tags(tags, limit)
+      tags.each do |tag|
+        if (tag.posts.count <= limit)
+          tag.destroy
+        end
+      end
     end
 end

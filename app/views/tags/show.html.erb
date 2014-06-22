@@ -1,0 +1,28 @@
+<h1><%= @tag.name %></h1>
+<% if current_user.try(:admin?) %>
+  <p>
+    <%= link_to 'Destroy', @tag, method: :delete, data: { confirm: 'Are you sure?' } %>
+  </p>
+<% end %>
+
+<table>
+  <tr>
+    <th>Post</th>
+    <th colspan="2"></th>
+  </tr>
+
+  <% @tag.posts.each do |post| %>
+    <tr>
+      <td><%= post.title %></td>
+      </td>
+      <td><%= link_to 'Show', post %></td>
+      <% if (current_user == post.user  && post.user != nil) || current_user.try(:admin?) %>
+        <td><%= link_to 'Destroy', post, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      <% end %>
+    </tr>
+  <% end %>
+</table>
+
+<p>
+  <%= link_to 'Tags List', tags_path %>
+</p>

@@ -3,7 +3,6 @@ By Adam O'Grady [@adamjogrady](http://twitter.com/adamjogrady)
 
 This represents the blog component of the possible future SiteHub project, it will be continually worked upon until it's in a production ready standard (hopefully) and likely rolled into the rest of the SiteHub project.
 
-
 ### MIT License
 Copyright (c) 2014 Adam O'Grady
 
