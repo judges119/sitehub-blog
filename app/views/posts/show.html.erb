@@ -1,32 +1,34 @@
-<p>
-  <strong>Title:</strong>
-  <%= @post.title %>
-</p>
-
-<p>
-  <strong>Content:</strong>
-  <%= @post.content %>
-</p>
-
-<p>
-  <strong>Tags:</strong>
-  <% @post.tags.each do |t| %>
-    <%= link_to t.name, t %><% if @post.tags.last != t %>, <% end %>
-  <% end %>
-</p>
-
-<p>
-  <strong>User:</strong>
+<div class="container">
+  <div>
+    <h1 style="text-align:center"><%= @post.title %></h1>
+  </div>
+  
   <% if @post.user != nil %>
-    <%= @post.user.email %>
-  <% else %>
-    [User Deleted]
+    <%= image_tag @post.user.gravatar_url(:default => "wavatar"), style: "float:left;" %>
   <% end %>
-</p>
+  
+  <div>
+    <% if @post.user != nil %>
+      <strong><%= @post.user.email %></strong>
+    <% else %>
+      <strong>[User Deleted]</strong>
+    <% end %>
+  </div>
+  
+  <div>
+    <% @post.contents.to_ary.sort! { |x, y| x.position <=> y.position }.each do |content| %>
+      <div>
+        <%= content.content %> <%= image_tag content.picture_url if content.picture.present? %>
+      </div>
+    <% end %>
+  </div>
 
-<% if @post.user != nil %>
-  <%= image_tag @post.user.gravatar_url(:default => "wavatar") %>
-<% end %>
+  <div>
+    <strong>Tags:</strong>
+    <% @post.tags.each do |t| %>
+      <%= link_to t.name, t %><% if @post.tags.last != t %>, <% end %>
+    <% end %>
+  </div>
 
 <p>
   <% if (current_user == @post.user  && @post.user != nil) || current_user.try(:admin?) %>

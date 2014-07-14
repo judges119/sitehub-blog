@@ -46,6 +46,25 @@ class PostsController < ApplicationController
       @post.tags = ready_tags
       
       if @post.save
+        if params[:content][:content]
+          params[:content][:content].each do |text|
+            content = Content.new
+            content.content = text[1]
+            content.position = text[0]
+            content.post_id = @post.id
+            content.save
+          end
+        end
+        if params[:content][:picture]
+          params[:content][:picture].each do |picture|
+            content = Content.new
+            content.picture = picture[1]
+            content.position = picture[0]
+            content.post_id = @post.id
+            content.save
+          end
+        end
+
         redirect_to @post, notice: 'Post was successfully created.'
       else
         destroy_orphaned_tags(@post.tags, 0)
@@ -118,11 +137,15 @@ class PostsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def post_params
-      params.require(:post).permit(:title, :content, :user_id)
+      params.require(:post).permit(:title, :user_id)
     end
     
     def tag_params
       params.require(:post).permit(:tag_ids)
+    end
+    
+    def content_params
+      params.require(:content).permit(:picture)
     end
     
     def ready_tags

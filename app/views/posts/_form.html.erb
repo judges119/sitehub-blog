@@ -1,4 +1,4 @@
-<%= form_for(@post) do |f| %>
+<%= form_for @post, html: {multipart: true} do |f| %>
   <% if @post.errors.any? %>
     <div id="error_explanation">
       <h2><%= pluralize(@post.errors.count, "error") %> prohibited this post from being saved:</h2>
@@ -15,9 +15,12 @@
     <%= f.label :title %><br>
     <%= f.text_field :title %>
   </div>
-  <div class="field">
-    <%= f.label :content %><br>
-    <%= f.text_area :content %>
+  <div id="content" class="field">
+    
+  </div>
+  <div id="content_add_button">
+    <button type="button" onclick="addText()">Add Text</button>
+    <button type="button" onclick="addPicture()">Add Picture</button>
   </div>
   <div>
     <%= f.label :tag_ids %><br>
@@ -32,3 +35,14 @@
     <%= f.submit %>
   </div>
 <% end %>
+<script>
+  var x = 0;
+  
+  function addText() {
+    $("#content").append('<div><textarea name="content[content][' + x++ + ']"></textarea></div>');
+  }
+  
+  function addPicture() {
+    $("#content").append('<div><input type="file" name="content[picture][' + x++ + '"></div>');
+  }
+</script>
